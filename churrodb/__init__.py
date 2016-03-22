@@ -572,7 +572,8 @@ class IndexMixin(ChurroDbAware, IIndex):
     @_dirty.setter
     def _dirty(self, dirty):
         self.__dirty = dirty
-        self._session()
+        if dirty:
+            self._session()
 
     @property
     def idx(self):
@@ -629,6 +630,9 @@ class _IndexSession(object):
 
     def before_commit(self):
         self.obj.idx_update(self.obj)
+
+    def set_dirty(self):
+        self._dirty = True
 
     def close(self):
         self.closed = True
