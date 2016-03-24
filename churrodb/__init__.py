@@ -302,9 +302,14 @@ class IndexesFolder(ChurroDbAware, IIndex, churro.PersistentFolder):
         parent["_index"] = self
 
     def idx_find(self, key, subindex=None):
+        if subindex is not None:
+            if subindex not in self:
+                raise Exception("there is no index called '" + subindex + "'")
+            return self[subindex].idx_find(key)
+
         found = []
         for idx in self.values():
-            found.extend(idx.idx_find(key, subindex))
+            found.extend(idx.idx_find(key))
 
         return found
 

@@ -535,7 +535,8 @@ class ChurroDbTests(unittest.TestCase):
     def test_index_indexes_folder(self):
         tx = transaction.begin()
 
-        mock_index = unittest.mock.MagicMock()
+        mock_index_a = unittest.mock.MagicMock()
+        mock_index_b = unittest.mock.MagicMock()
 
         class Abc(churrodb.IndexMixin, churro.PersistentDict):
             index_factory = churrodb.IndexesFolder
@@ -543,12 +544,20 @@ class ChurroDbTests(unittest.TestCase):
         db = churrodb.ChurroDb(self.churrodb_path)
         db["a"] = Abc()
         db["a"].init_index()
-        db["a"]["_index"]["idx_a"] = mock_index
+        db["a"]["_index"]["idx_a"] = mock_index_a
+        db["a"]["_index"]["idx_b"] = mock_index_b
         db["a"]["b"] = "c"
 
         tx.commit()
 
-        self.assertEqual(1, mock_index.idx_update.call_count)
+        self.assertEqual(1, mock_index_a.idx_update.call_count)
+
+        db["a"].idx_find("")
+        db["a"].idx_find("", "idx_b")
+
+        self.assertRaisesRegex(Exception, "there is no index called 'idx_c'", lambda: db["a"].idx_find("", "idx_c"))
+        self.assertEqual(1, mock_index_a.idx_find.call_count)
+        self.assertEqual(2, mock_index_b.idx_find.call_count)
 
     def test_index_full(self):
         tx = transaction.begin()
