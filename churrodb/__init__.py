@@ -290,7 +290,11 @@ class ChurroDb(IIndex):
         git = subprocess.Popen(
             ["git", "show", hashstr],
             cwd=self._path, stdout=subprocess.PIPE, universal_newlines=text_mode)
-        return churro.codec.decode(git.stdout)
+        object = churro.codec.decode(git.stdout)
+        if hasattr(object, "churrodb"):
+            object.churrodb = self
+
+        return object
 
 
 class IndexUpdateError(Exception):
