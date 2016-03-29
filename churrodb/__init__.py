@@ -576,11 +576,15 @@ class IndexMixin(ChurroDbAware, IIndex):
 
     @property
     def _dirty(self):
-        return self.__dirty
+        return getattr(super(), "_dirty", self.__dirty)
 
     @_dirty.setter
     def _dirty(self, dirty):
-        self.__dirty = dirty
+        try:
+            super()._dirty = dirty
+        except AttributeError:
+            self.__dirty = dirty
+
         if dirty:
             self._session()
 
