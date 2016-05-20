@@ -263,6 +263,10 @@ class ChurroDb(IIndex):
         self.root().init_index()
         self.refresh_data()
 
+    @property
+    def idx(self):
+        return self.get("_index")
+
     def idx_update(self, *args, **kwargs):
         root = self.root()
         # if hasattr(root, "idx_update"):
@@ -328,6 +332,11 @@ class IndexesFolder(ChurroDbAware, IIndex, churro.PersistentFolder):
     @property
     def idx(self):
         return self
+
+    def by_name(self, name):
+        for index in self.values():
+            if isinstance(index, IIndex) and getattr(index, "name", "") == name:
+                return index
 
 
 class AbstractDictIndex(ChurroDbAware, IIndex, churro.PersistentDict):
@@ -480,6 +489,7 @@ class GitObjectHashIndex(AbstractDictIndex):
 
         seen_keys = []
 
+        log.info("building git object hash index (" + str(self) + ")...")
         for key, value in data.items():
             resource_path = churro.resource_path(value)
             if not db.fs.isdir(resource_path):
@@ -517,6 +527,11 @@ class GitObjectHashIndex(AbstractDictIndex):
             return [found]
 
     idx_find_first = idx_find_first
+
+    def by_name(self, name):
+        for key, subindex in self.auxiliary.items():
+            if key.startswith(name):
+                return subindex
 
 
 class GitDictKeyHashIndex(GitObjectHashIndex):
